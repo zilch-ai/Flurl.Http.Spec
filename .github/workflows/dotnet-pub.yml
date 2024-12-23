@@ -13,6 +13,7 @@ jobs:
     permissions:
       contents: write
       deployments: write
+      packages: write
 
     steps:
     # Prepare: Enlist + Restore + Build + Test
