@@ -17,6 +17,9 @@ jobs:
     steps:
     # Prepare: Enlist + Restore + Build + Test
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+        fetch-tags: true
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -31,15 +34,28 @@ jobs:
     # Extract Version Tag
     - name: Extract version number
       run: |
-        echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
-        if [[ "$VERSION" =~ -pre$ ]]; then
+        # Extract version number & suffix from tag
+        VTAG=${GITHUB_REF#refs/tags/}
+        VERSION=${VTAG#v}
+        VERSION_SUFFIX=${VERSION#*-}
+        echo "VTAG=${VTAG}" >> $GITHUB_ENV
+        echo "VERSION=${VERSION}" >> $GITHUB_ENV
+        echo "VERSION_SUFFIX=${VERSION_SUFFIX}" >> $GITHUB_ENV
+
+        # Set NuGet package source based on version suffix
+        if [[ -z "$VERSION_SUFFIX" || "$VERSION_SUFFIX" == "pre" ]]; then
           echo "PACKAGE_SOURCE=https://api.nuget.org/v3/index.json" >> $GITHUB_ENV
-        elif [[ "$VERSION" =~ -[a-zA-Z]+$ ]]; then
-          echo "PACKAGE_SOURCE=https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" >> $GITHUB_ENV
         else
-          echo "PACKAGE_SOURCE=https://api.nuget.org/v3/index.json" >> $GITHUB_ENV
+          echo "PACKAGE_SOURCE=https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" >> $GITHUB_ENV
         fi
-        
+
+        # Extract Release Notes from description of the tag
+        RELEASE_NOTES=$(git tag -l --format='%(contents)' "$VTAG")
+        RELEASE_NOTES=${RELEASE_NOTES:-"No release notes found for tag $VTAG"}
+        echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+        echo "$RELEASE_NOTES" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+
     # Publish NuGet package: Pack + Push
     - name: Pack Nuget package
       run: dotnet pack -c Release --no-build -o ./artifacts -p:PackageVersion=${{ env.VERSION }}
@@ -54,10 +70,7 @@ jobs:
         dotnet publish -c Release -r osx-arm64
     - name: Archive Binaries
       run: |
-        original_dir=$(pwd)
-        cd ./publish/win-x64/Flurl.Http.Spec.Playground
-        zip -r "$original_dir/artifacts/playground-win.x64-v${{ env.VERSION }}.zip" *
-        cd "$original_dir"
+        zip -r ./artifacts/playground-win.x64-v${{ env.VERSION }}.zip ./publish/win-x64/Flurl.Http.Spec.Playground/*
         tar -czvf ./artifacts/playground-linux.x64-v${{ env.VERSION }}.tar.gz -C ./publish/linux-x64/Flurl.Http.Spec.Playground .
         tar -czvf ./artifacts/playground-osx-arm64-v${{ env.VERSION }}.tar.gz -C ./publish/osx-arm64/Flurl.Http.Spec.Playground .
     - name: Release Binaries
@@ -65,8 +78,12 @@ jobs:
       with:
         name: Release ${{ env.VERSION }}
         body: |
-          Release notes for version ${{ env.VERSION }}:
-          - Playground CLI built and packaged successfully.
+          ## What's New in ${{ env.VERSION }}
+          ${{ env.RELEASE_NOTES }}
+          ## Available Artifacts
+          - Windows(x64)
+          - Linux(x64)
+          - macOS(arm64).
         files: |
           ./artifacts/playground-*.zip
           ./artifacts/playground-*.tar.gz 
