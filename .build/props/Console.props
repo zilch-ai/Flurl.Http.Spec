@@ -3,6 +3,7 @@
   <!-- Console CLI -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>    
     <IsPublishable>true</IsPublishable>
   </PropertyGroup>
 
@@ -35,7 +36,6 @@
 
     <PublishTrimmed>true</PublishTrimmed>
     <TrimUnusedDependencies>true</TrimUnusedDependencies>
-    <GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>    
 
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>

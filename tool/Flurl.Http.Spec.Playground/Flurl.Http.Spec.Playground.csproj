@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="$(BuildDir)/props/Console.props"/>
+  <Import Project="$(BuildDir)/props/Console.props" />
   
   <ItemGroup>
     <ProjectReference Include="$(SourceDir)/Flurl.Http.Spec/Flurl.Http.Spec.csproj" />
