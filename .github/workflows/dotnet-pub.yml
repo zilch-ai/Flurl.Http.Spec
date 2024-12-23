@@ -40,13 +40,6 @@ jobs:
         echo "VERSION=${VERSION}" >> $GITHUB_ENV
         echo "VERSION_SUFFIX=${VERSION_SUFFIX}" >> $GITHUB_ENV
 
-        # Set NuGet package source based on version suffix
-        if [[ -z "$VERSION_SUFFIX" || "$VERSION_SUFFIX" == "pre" ]]; then
-          echo "PACKAGE_SOURCE=https://api.nuget.org/v3/index.json" >> $GITHUB_ENV
-        else
-          echo "PACKAGE_SOURCE=https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" >> $GITHUB_ENV
-        fi
-
         # Extract Release Notes from description of the tag
         RELEASE_NOTES=$(git tag -l --format='%(contents)' "$VTAG")
         RELEASE_NOTES=${RELEASE_NOTES:-"No release notes found for tag $VTAG"}
@@ -58,7 +51,11 @@ jobs:
     - name: Pack Nuget package
       run: dotnet pack -c Release --no-build -o ./artifacts -p:PackageVersion=${{ env.VERSION }}
     - name: Push Nuget package
-      run: dotnet nuget push ./artifacts/*.nupkg -s ${{ env.PACKAGE_SOURCE }} -k ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+      run: dotnet nuget push ./artifacts/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+      if: env.VERSION_SUFFIX == '' || env.VERSION_SUFFIX == 'pre'
+    - name: Push Github package
+      run: dotnet nuget push ./artifacts/*.nupkg -s https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json -k ${{ secrets.GH_PAT }} --skip-duplicate
+      if: env.VERSION_SUFFIX != '' && env.VERSION_SUFFIX != 'pre'
 
     # Publish Playground CLI: Publish + Zip + Release
     - name: Publish Binaries
