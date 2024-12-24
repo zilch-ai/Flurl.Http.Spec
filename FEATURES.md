@@ -102,6 +102,9 @@ Here are the full feature list of the Flurl.Http.Spec library:
   - [ ] Examples and Use Cases
 
 - Github Integration
+  - Git Repo
+    - [x] .gitignore Files
+    - [x] .gitconfig Files
   - Github Onboarding
     - [x] Permission
     - [x] Boards
