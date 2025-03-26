@@ -39,6 +39,7 @@
     <PackageReference Include="Bogus" />
     <PackageReference Include="NodaTime" />
     <PackageReference Include="NodaTime.Testing" />
+    <Using Include="System.Globalization" />
     <Using Include="Xunit" />
     <Using Include="FluentAssertions" />
     <Using Include="Moq" />
