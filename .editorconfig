@@ -9,7 +9,12 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 
 [*.cs]
-dotnet_diagnostic.SA1000.severity = silent
+# fileheader
+file_header_template = """
+// <copyright file="{FileName}" company="{Company}">
+// Copyright (c) {Company}. All rights reserved.
+// </copyright>
+"""
 # namespace
 dotnet_style_namespace_match_folder = false
 csharp_style_namespace_declarations = file_scoped:warning
